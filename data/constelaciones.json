@@ -48,7 +48,11 @@
         {
           "id": 4,
           "label": "Delta4",
-          "linkedTo": [{"starId": 1, "distance": 87}],
+          "linkedTo": [
+            {"starId": 1, "distance": 87},
+            {"starId": 7, "distance": 15},
+            {"starId": 9, "distance": 30}
+          ],
           "radius": 0.3,
           "timeToEat": 2,
           "amountOfEnergy": 1,
@@ -58,7 +62,10 @@
         {
           "id": 5,
           "label": "Epsilon5",
-          "linkedTo": [{"starId": 3, "distance": 86}],
+          "linkedTo": [
+            {"starId": 3, "distance": 86},
+            {"starId": 9, "distance": 20}
+          ],
           "radius": 0.5,
           "timeToEat": 3,
           "amountOfEnergy": 2,
@@ -68,7 +75,10 @@
         {
           "id": 7,
           "label": "Gamma7",
-          "linkedTo": [{"starId": 2, "distance": 45}],
+          "linkedTo": [
+            {"starId": 2, "distance": 45},
+            {"starId": 4, "distance": 15}
+          ],
           "radius": 0.4,
           "timeToEat": 2,
           "amountOfEnergy": 2,
@@ -78,7 +88,11 @@
         {
           "id": 9,
           "label": "Zeta9",
-          "linkedTo": [{"starId": 3, "distance": 15}],
+          "linkedTo": [
+            {"starId": 3, "distance": 15},
+            {"starId": 4, "distance": 30},
+            {"starId": 5, "distance": 20}
+          ],
           "radius": 0.4,
           "timeToEat": 2,
           "amountOfEnergy": 3,
