@@ -4,14 +4,13 @@ import json
 
 class Burro:
     def __init__(self, burroenergia_inicial=100, estado_salud="Excelente", pasto=0,
-                 number=0, start_age=0, death_age=0, constellations=None):
+                 number=0, start_age=0, death_age=0):
         self._burroenergia_inicial = burroenergia_inicial
         self._estado_salud = estado_salud
         self._pasto = pasto
         self._number = number
         self._start_age = start_age
         self._death_age = death_age
-        self._constellations = constellations or []
 
     # ----- Getters -----
     def get_burroenergia_inicial(self):
@@ -32,9 +31,6 @@ class Burro:
     def get_death_age(self):
         return self._death_age
 
-    def get_constellations(self):
-        return self._constellations
-
     # ----- Setters -----
     def set_burroenergia_inicial(self, value):
         self._burroenergia_inicial = value
@@ -54,27 +50,21 @@ class Burro:
     def set_death_age(self, value):
         self._death_age = value
 
-    def set_constellations(self, value):
-        self._constellations = value
-
     # ----- Conversión desde un diccionario (JSON -> objeto) -----
     @classmethod
     def from_dict(cls, data):
-        constellations = data.get("constellations", [])
         return cls(
             burroenergia_inicial=data.get("burroenergiaInicial", 100),
             estado_salud=data.get("estadoSalud", "Desconocido"),
             pasto=data.get("pasto", 0),
             number=data.get("number", 0),
             start_age=data.get("startAge", 0),
-            death_age=data.get("deathAge", 0),
-            constellations=constellations
+            death_age=data.get("deathAge", 0)
         )
 
     # ----- Conversión a diccionario (objeto -> JSON) -----
     def to_dict(self):
         return {
-            "constellations": self._constellations,
             "burroenergiaInicial": self._burroenergia_inicial,
             "estadoSalud": self._estado_salud,
             "pasto": self._pasto,
@@ -88,4 +78,5 @@ class Burro:
         return json.dumps(self.to_dict(), indent=2, ensure_ascii=False)
 
     def __str__(self):
-        return f"Burro({self._estado_salud}, Energía={self._burroenergia_inicial}, Pasto={self._pasto}, Edad={self._start_age}/{self._death_age})"
+        return (f"Burro({self._estado_salud}, Energía={self._burroenergia_inicial}, "
+                f"Pasto={self._pasto}, Edad={self._start_age}/{self._death_age})")

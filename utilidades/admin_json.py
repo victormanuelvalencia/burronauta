@@ -7,36 +7,30 @@ def read_json(path: str):
     with open(path, "r", encoding="utf-8") as file:
         return json.load(file)
 
+def write_json(data, path):
+    """Guardar un diccionario como JSON en disco."""
+    with open(path, "w", encoding="utf-8") as f:
+        json.dump(data, f, indent=4, ensure_ascii=False)
+    print(f"✅ Archivo guardado en {path}")
 
-def write_json(data, path: str):
-    with open(path, "w", encoding="utf-8") as file:
-        json.dump(data, file, indent=4, ensure_ascii=False)
 
-
-def guardar_estrellas(original_json, cambios_editor, ruta_archivo):
+def guardar_estrellas_en_json(constelaciones_data, estrellas_info, ruta_archivo):
     """
-    Mezcla los cambios del editor dentro del JSON original y guarda en disco.
+    Mezcla los cambios del editor dentro del JSON original de constelaciones
+    y guarda en disco, asegurando que vida_delta y salud_delta se agreguen.
     """
-    # Aplicar cambios en memoria
-    for id_, cambios in cambios_editor.items():
+    for const in constelaciones_data.get("constellations", []):
+        for s in const.get("starts", []):
+            sid = str(s.get("id"))
+            if sid in estrellas_info:
+                estrella_edit = estrellas_info[sid]
+                # Agregar o actualizar las claves vida_delta y salud_delta
+                s["vida_delta"] = int(estrella_edit.get("vida_delta", 0))
+                salud_val = estrella_edit.get("salud_delta")
+                s["salud_delta"] = salud_val if salud_val else None
 
-        # Convertir ID a string si el JSON usa strings como keys
-        id_key = str(id_)
-
-        if id_key not in original_json:
-            print(f"⚠️ ID {id_key} no existe en el JSON, se ignora.")
-            continue
-
-        if "vida_delta" in cambios:
-            original_json[id_key]["vida_delta"] = cambios["vida_delta"]
-
-        if "salud_delta" in cambios:
-            original_json[id_key]["salud_delta"] = cambios["salud_delta"]
-
-    # Guardar archivo actualizado
+    # Guardar archivo
     with open(ruta_archivo, "w", encoding="utf-8") as f:
-        json.dump(original_json, f, indent=4, ensure_ascii=False)
+        json.dump(constelaciones_data, f, indent=4, ensure_ascii=False)
 
-    print("✅ Archivo actualizado exitosamente.")
-
-
+    print("✅ Archivo de constelaciones actualizado correctamente con vida_delta y salud_delta.")

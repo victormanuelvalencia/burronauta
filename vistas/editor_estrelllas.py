@@ -1,9 +1,15 @@
+# vistas/editor_estrellas
+
 import tkinter as tk
 from tkinter import ttk, messagebox
 
 SALUD_STATES = ["Excelente", "Buena", "Regular", "Mala", "Moribundo", "Muerto"]
 
 def abrir_editor_estrellas(estrellas_info: dict, guardar_callback=None):
+    """
+    Abre una ventana para que el usuario pueda editar los efectos investigativos
+    de cada estrella (vida_delta y salud_delta) antes de iniciar la simulación.
+    """
     root = tk.Toplevel()
     root.title("Editor de efectos investigativos (pre-misión)")
     root.geometry("520x420")
@@ -15,6 +21,7 @@ def abrir_editor_estrellas(estrellas_info: dict, guardar_callback=None):
         nonlocal editing
         editing = True
 
+    # --- Frame izquierdo: lista de estrellas ---
     frame_left = tk.Frame(root, bg="#222222")
     frame_left.pack(side="left", fill="y", padx=10, pady=10)
 
@@ -23,11 +30,17 @@ def abrir_editor_estrellas(estrellas_info: dict, guardar_callback=None):
     lb.pack()
 
     id_map = []
-    for id_ in sorted(estrellas_info.keys(), key=lambda x: int(str(x))):
-        label = estrellas_info[id_].get("label", str(id_))
-        id_map.append(id_)
-        lb.insert("end", f"{id_} - {label}")
+    if estrellas_info:
+        for id_ in sorted(estrellas_info.keys(), key=lambda x: int(str(x))):
+            label = estrellas_info[id_].get("label", str(id_))
+            id_map.append(id_)
+            lb.insert("end", f"{id_} - {label}")
+    else:
+        messagebox.showerror("Error", "No se encontraron estrellas en el JSON.")
+        root.destroy()
+        return
 
+    # --- Frame derecho: edición de efectos ---
     frame_right = tk.Frame(root, bg="#222222")
     frame_right.pack(side="right", fill="both", expand=True, padx=10, pady=10)
 
@@ -52,7 +65,6 @@ def abrir_editor_estrellas(estrellas_info: dict, guardar_callback=None):
     tk.Label(salud_frame, text="Estado de salud resultante (salud_delta):", bg="#222222", fg="white").pack(anchor="w")
     salud_combo = ttk.Combobox(salud_frame, values=SALUD_STATES, textvariable=salud_var, state="readonly")
     salud_combo.pack(fill="x")
-    salud_combo.bind("<Button-1>", set_editing)
     salud_combo.bind("<<ComboboxSelected>>", set_editing)
 
     lbl_coords = tk.Label(frame_right, text="", bg="#222222", fg="#cccccc", justify="left")
@@ -76,7 +88,7 @@ def abrir_editor_estrellas(estrellas_info: dict, guardar_callback=None):
         if editing:
             return
         sel = lb.curselection()
-        if not sel:
+        if not sel or not id_map:
             return
         _mostrar(id_map[sel[0]])
 
@@ -91,8 +103,8 @@ def abrir_editor_estrellas(estrellas_info: dict, guardar_callback=None):
 
         try:
             estrellas_info[idx]["vida_delta"] = int(vida_var.get())
-        except:
-            messagebox.showerror("Error", "vida_delta debe ser entero")
+        except ValueError:
+            messagebox.showerror("Error", "vida_delta debe ser un entero")
             return
 
         estrellas_info[idx]["salud_delta"] = salud_var.get() or None
@@ -103,13 +115,16 @@ def abrir_editor_estrellas(estrellas_info: dict, guardar_callback=None):
     def guardar():
         if guardar_callback:
             guardar_callback(estrellas_info)
+            messagebox.showinfo("✅ Guardado", "Cambios guardados en el JSON")
 
     tk.Button(frame_right, text="💾 Aplicar cambios", bg="#4CAF50", fg="white", command=aplicar).pack(pady=5)
     tk.Button(frame_right, text="Guardar todo", bg="#0b84ff", fg="white", command=guardar).pack(pady=5)
     tk.Button(frame_right, text="Continuar", bg="#ff9800", fg="white", command=root.destroy).pack(pady=5)
 
-    lb.selection_set(0)
-    _mostrar(id_map[0])
+    # Mostrar la primera estrella si hay al menos una
+    if id_map:
+        lb.selection_set(0)
+        _mostrar(id_map[0])
 
     root.transient()
     root.grab_set()
