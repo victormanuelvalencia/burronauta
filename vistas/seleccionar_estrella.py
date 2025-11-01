@@ -2,8 +2,6 @@
 
 import tkinter as tk
 from tkinter import ttk
-from functools import partial
-
 
 def seleccionar_estrella_inicio(estrellas_ids, callback):
     """
@@ -14,7 +12,7 @@ def seleccionar_estrella_inicio(estrellas_ids, callback):
         callback (func): función a ejecutar cuando se seleccione la estrella
     """
     window = tk.Tk()
-    window.title("Seleccionar estrella inicial 🪐")
+    window.title("Seleccionar estrella inicial")
     window.geometry("350x220")
     window.config(bg="#1a1a1a")
 

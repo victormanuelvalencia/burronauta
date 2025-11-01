@@ -6,13 +6,13 @@ from utilidades.admin_json import read_json
 
 def abrir_menu():
     root = tk.Tk()
-    root.title("Menú - Proyecto Grafos del Burro 🐴✨")
+    root.title("Menú - Burronauta")
     root.geometry("400x200")
     root.config(bg="#2b2b2b")
 
     label = tk.Label(
         root,
-        text="Proyecto Grafos - Burro Espacial",
+        text="Proyecto Grafos - Burronauta",
         font=("Arial", 14, "bold"),
         fg="white",
         bg="#2b2b2b"

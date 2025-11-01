@@ -39,14 +39,6 @@ class Grafo:
             "vertices": [v.to_dict() for v in self.lista_vertices.values()]
         }
 
-    def toggle_edge(self, a, b, enabled: bool):
-        if not enabled:
-            self.lista_vertices[a].adjacent.pop(b, None)
-            self.lista_vertices[b].adjacent.pop(a, None)
-        else:
-            # recuperar de info base o JSON
-            pass
-
     @classmethod
     def from_dict(cls, data):
         """Crea un grafo a partir de un diccionario."""
