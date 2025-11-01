@@ -113,7 +113,7 @@ class Planificador:
     # SIMULA LO QUE PASA AL LLEGAR A UNA ESTRELLA
     # =====================================================
     def _simular_llegada(self, id_estrella, estado):
-        estrella = self.estrellas.get(id_estrella, {})
+        estrella = self.estrellas.get(str(id_estrella), {})
         energia = estado["energia"]
         pasto = estado["pasto"]
         salud = estado["salud"]
@@ -123,7 +123,34 @@ class Planificador:
         time_to_eat = estrella.get("timeToEat", 1)
         energia_por_salud = ENERGIA_POR_SALUD.get(salud, 2)
 
-        # Comer si energía < 50%
+        # ========================================================
+        # 1) Efectos investigativos definidos por el científico
+        # ========================================================
+
+        vida_delta = estrella.get("vida_delta", 0)  # puede ser negativo (pierde años)
+        salud_delta = estrella.get("salud_delta", None)  # puede ser "mejorar", "empeorar", None
+
+        # Afectar tiempo de vida
+        edad += vida_delta
+        if edad < 0:
+            edad = 0
+
+        # Cambiar salud según decisión científica
+        if salud_delta == "mejorar":
+            if salud == "Malo":
+                salud = "Regular"
+            elif salud == "Regular":
+                salud = "Excelente"
+
+        elif salud_delta == "empeorar":
+            if salud == "Excelente":
+                salud = "Regular"
+            elif salud == "Regular":
+                salud = "Malo"
+
+        # ========================================================
+        # 2) Comer si energía < 50%
+        # ========================================================
         if energia < 50 and pasto > 0:
             tiempo_total = time_to_eat * 10
             tiempo_comer = tiempo_total * 0.5
@@ -135,14 +162,24 @@ class Planificador:
                 energia = min(100, energia + ganancia)
                 pasto -= kg_comidos
 
-        # Investigación
+        # ========================================================
+        # 3) Investigación (consume energía)
+        # ========================================================
         energia = max(0, energia - 2)
 
-        # Hipergigante
+        # ========================================================
+        # 4) Hipergigante: recarga y duplica pasto
+        # ========================================================
         if hiper:
             recarga = math.floor(energia * 0.5)
             energia = min(100, energia + recarga)
             pasto *= 2
 
-        estado.update({"energia": energia, "pasto": pasto, "edad": edad})
+        estado.update({
+            "energia": energia,
+            "pasto": pasto,
+            "edad": edad,
+            "salud": salud
+        })
+
         return estado

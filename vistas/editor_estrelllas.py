@@ -1,0 +1,116 @@
+import tkinter as tk
+from tkinter import ttk, messagebox
+
+SALUD_STATES = ["Excelente", "Buena", "Regular", "Mala", "Moribundo", "Muerto"]
+
+def abrir_editor_estrellas(estrellas_info: dict, guardar_callback=None):
+    root = tk.Toplevel()
+    root.title("Editor de efectos investigativos (pre-misión)")
+    root.geometry("520x420")
+    root.config(bg="#222222")
+
+    editing = False
+
+    def set_editing(*_):
+        nonlocal editing
+        editing = True
+
+    frame_left = tk.Frame(root, bg="#222222")
+    frame_left.pack(side="left", fill="y", padx=10, pady=10)
+
+    tk.Label(frame_left, text="Estrellas", bg="#222222", fg="white", font=("Arial", 11, "bold")).pack(pady=(0,6))
+    lb = tk.Listbox(frame_left, width=20, height=20)
+    lb.pack()
+
+    id_map = []
+    for id_ in sorted(estrellas_info.keys(), key=lambda x: int(str(x))):
+        label = estrellas_info[id_].get("label", str(id_))
+        id_map.append(id_)
+        lb.insert("end", f"{id_} - {label}")
+
+    frame_right = tk.Frame(root, bg="#222222")
+    frame_right.pack(side="right", fill="both", expand=True, padx=10, pady=10)
+
+    tk.Label(frame_right, text="Editar efectos investigativos", bg="#222222", fg="white", font=("Arial", 12, "bold")).pack(pady=(0,8))
+
+    vida_var = tk.StringVar(value="0")
+    salud_var = tk.StringVar()
+
+    def build_input(label_text, var):
+        frame = tk.Frame(frame_right, bg="#222222")
+        frame.pack(fill="x", pady=6)
+        tk.Label(frame, text=label_text, bg="#222222", fg="white").pack(anchor="w")
+        entry = tk.Entry(frame, textvariable=var)
+        entry.pack(fill="x")
+        entry.bind("<FocusIn>", set_editing)
+        return entry
+
+    vida_entry = build_input("Años de vida (vida_delta):", vida_var)
+
+    salud_frame = tk.Frame(frame_right, bg="#222222")
+    salud_frame.pack(fill="x", pady=6)
+    tk.Label(salud_frame, text="Estado de salud resultante (salud_delta):", bg="#222222", fg="white").pack(anchor="w")
+    salud_combo = ttk.Combobox(salud_frame, values=SALUD_STATES, textvariable=salud_var, state="readonly")
+    salud_combo.pack(fill="x")
+    salud_combo.bind("<Button-1>", set_editing)
+    salud_combo.bind("<<ComboboxSelected>>", set_editing)
+
+    lbl_coords = tk.Label(frame_right, text="", bg="#222222", fg="#cccccc", justify="left")
+    lbl_coords.pack(anchor="w")
+    lbl_timeToEat = tk.Label(frame_right, text="", bg="#222222", fg="#cccccc", justify="left")
+    lbl_timeToEat.pack(anchor="w")
+    lbl_hyper = tk.Label(frame_right, text="", bg="#222222", fg="#cccccc", justify="left")
+    lbl_hyper.pack(anchor="w")
+
+    def _mostrar(id_sel):
+        info = estrellas_info[id_sel]
+        vida_var.set(str(info.get("vida_delta", 0)))
+        salud_var.set(info.get("salud_delta", "") or "")
+        coords = info.get("coordenates", {})
+        lbl_coords.config(text=f"Coordenadas: {coords.get('x','?')}, {coords.get('y','?')}")
+        lbl_timeToEat.config(text=f"timeToEat: {info.get('timeToEat', 'N/A')}")
+        lbl_hyper.config(text=f"Hipergigante: {'Sí' if info.get('hypergiant', False) else 'No'}")
+
+    def on_select(evt):
+        nonlocal editing
+        if editing:
+            return
+        sel = lb.curselection()
+        if not sel:
+            return
+        _mostrar(id_map[sel[0]])
+
+    lb.bind("<<ListboxSelect>>", on_select)
+
+    def aplicar():
+        nonlocal editing
+        sel = lb.curselection()
+        if not sel:
+            return
+        idx = id_map[sel[0]]
+
+        try:
+            estrellas_info[idx]["vida_delta"] = int(vida_var.get())
+        except:
+            messagebox.showerror("Error", "vida_delta debe ser entero")
+            return
+
+        estrellas_info[idx]["salud_delta"] = salud_var.get() or None
+
+        editing = False
+        messagebox.showinfo("OK", "Cambios aplicados")
+
+    def guardar():
+        if guardar_callback:
+            guardar_callback(estrellas_info)
+
+    tk.Button(frame_right, text="💾 Aplicar cambios", bg="#4CAF50", fg="white", command=aplicar).pack(pady=5)
+    tk.Button(frame_right, text="Guardar todo", bg="#0b84ff", fg="white", command=guardar).pack(pady=5)
+    tk.Button(frame_right, text="Continuar", bg="#ff9800", fg="white", command=root.destroy).pack(pady=5)
+
+    lb.selection_set(0)
+    _mostrar(id_map[0])
+
+    root.transient()
+    root.grab_set()
+    root.wait_window()
