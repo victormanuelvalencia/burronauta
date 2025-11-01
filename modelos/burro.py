@@ -1,3 +1,5 @@
+# modelos/burro.py
+
 import json
 
 class Burro:

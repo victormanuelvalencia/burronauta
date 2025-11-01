@@ -1,3 +1,5 @@
+# utilidades/admin_json.py
+
 import json
 from modelos.grafo import Grafo
 

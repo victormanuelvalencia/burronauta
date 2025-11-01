@@ -1,4 +1,5 @@
 # modelos/vertice.py
+
 import json
 
 class Vertice:

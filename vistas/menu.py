@@ -1,8 +1,8 @@
 # vistas/menu.py
+
 import tkinter as tk
 from tkinter import filedialog, messagebox
 from utilidades.admin_json import read_json
-from vistas.carga_estrellas import mostrar_estrellas
 
 def abrir_menu():
     root = tk.Tk()
@@ -19,23 +19,26 @@ def abrir_menu():
     )
     label.pack(pady=20)
 
+    ruta_seleccionada = {"ruta": None}
+
     def cargar_json():
         ruta = filedialog.askopenfilename(
             title="Seleccionar archivo JSON",
             filetypes=[("Archivos JSON", "*.json")]
         )
+
         if not ruta:
-            return  # Si el usuario cancela
+            return
 
         try:
-            data = read_json(ruta)  # ← usamos tu función del módulo utilidades
-            messagebox.showinfo("Éxito", f"Archivo cargado correctamente ✅\n{ruta}")
-            root.destroy()  # Cerramos el menú
-            mostrar_estrellas(data)  # Mostramos las estrellas
+            read_json(ruta)
+            messagebox.showinfo("Éxito", "Archivo cargado correctamente ✅")
+            ruta_seleccionada["ruta"] = ruta
+            root.destroy()
         except Exception as e:
             messagebox.showerror("Error", f"No se pudo leer el archivo:\n{e}")
 
-    boton_cargar = tk.Button(
+    tk.Button(
         root,
         text="📂 Cargar archivo JSON",
         command=cargar_json,
@@ -43,7 +46,7 @@ def abrir_menu():
         fg="white",
         font=("Arial", 12, "bold"),
         width=25
-    )
-    boton_cargar.pack(pady=40)
+    ).pack(pady=40)
 
     root.mainloop()
+    return ruta_seleccionada["ruta"]

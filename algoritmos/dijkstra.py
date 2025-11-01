@@ -1,4 +1,5 @@
 # algoritmos/dijkstra.py
+
 import math
 
 def dijkstra_simple(graph, start_id, target_id, verbose=True):
