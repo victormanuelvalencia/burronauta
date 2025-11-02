@@ -29,12 +29,15 @@ def cargar_grafo_desde_json(ruta_archivo):
             grafo.add_vertex(star_id)
 
             # Guardamos su información (posición, tipo, hiper, etc.)
+            # Guardamos su información (posición, tipo, hiper, vida y salud)
             estrellas_info[star_id] = {
                 "label": star.get("label", f"Star_{star_id}"),
-                "coordenadas": star.get("coordenadas"),
+                "coordenadas": star.get("coordenates"),  # fíjate que tu JSON usa "coordenates"
                 "hypergiant": star.get("hypergiant", False),
                 "timeToEat": star.get("timeToEat", 1),
                 "galaxy": nombre,
+                "vida_delta": star.get("vida_delta", 0),
+                "salud_delta": star.get("salud_delta", None)
             }
 
             # Añadimos conexiones (edges)

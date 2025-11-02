@@ -56,7 +56,7 @@ class BurroControlador:
     # MÉTODOS DE PROCESO
     # ==================================================
     def _procesar_llegada(self, id_estrella):
-        """Aplica las reglas al llegar a una estrella."""
+        """Aplica las reglas al llegar a una estrella, corrigiendo vida_delta y salud_delta."""
         estrella = self.estrellas.get(id_estrella, {})
         energia, pasto, salud, edad = (
             self.estado["energia"],
@@ -67,27 +67,55 @@ class BurroControlador:
 
         evento = {"estrella": id_estrella, "acciones": []}
 
+        # --- Aplicar efectos de la estrella ---
+        # Vida_delta ahora afecta la 'vida_restante' o la energía, pero no la edad
+        vida_delta = estrella.get("vida_delta", 0)
+        if vida_delta != 0:
+            # Aquí transformamos vida_delta en porcentaje de energía perdido o ganado
+            energia -= abs(vida_delta)  # los negativos restan energía
+            energia = max(0, energia)
+            evento["acciones"].append(f"⏳ Vida ajustada: {'-' if vida_delta<0 else '+'}{abs(vida_delta)} (afecta energía)")
+
+        # Salud_delta: reemplaza el estado de salud si existe
+        salud_delta = estrella.get("salud_delta")
+        if salud_delta:
+            salud = salud_delta
+            evento["acciones"].append(f"🩺 Salud ajustada a {salud_delta}.")
+
+        # --- Comer si la energía es baja ---
         energia, pasto = self._accion_comer(estrella, energia, pasto, salud, evento)
+
+        # --- Investigar ---
         energia = self._accion_investigar(energia, evento)
+
+        # --- Hipergigante ---
         energia, pasto = self._accion_hipergigante(estrella, energia, pasto, evento)
 
-        self.estado.update({"energia": energia, "pasto": pasto, "edad": edad})
+        # --- Actualizar estado del burro ---
+        self.estado.update({"energia": energia, "pasto": pasto, "edad": edad, "salud": salud})
+
+        # --- Verificar si el burro muere ---
         self._verificar_muerte(energia, evento)
         self._registrar_evento(id_estrella, evento["acciones"])
 
-        # Mostrar resumen del paso
+        # --- Mostrar resumen del paso ---
         print(f"\n⭐ Llegó a {id_estrella}")
         for acc in evento["acciones"]:
             print("   -", acc)
-        print(f"   Estado actual: energía={energia}, pasto={pasto}, edad={edad}\n")
+        print(f"   Estado actual: energía={energia}, pasto={pasto}, edad={edad}, salud={salud}\n")
 
     # ==================================================
     # SUBFUNCIONES DE COMIDA, INVESTIGACIÓN, HIPER
     # ==================================================
     def _accion_comer(self, estrella, energia, pasto, salud, evento):
+        """
+        El burro come solo si tiene menos del 50% de energía.
+        Solo puede usar el 50% del tiempo de la estrella para comer.
+        La ganancia depende de la salud.
+        """
         time_to_eat = estrella.get("timeToEat", 1)
         if energia < 50 and pasto > 0:
-            tiempo_total = time_to_eat * 10
+            tiempo_total = time_to_eat * 10  # tiempo total estimado en la estrella
             tiempo_comer = tiempo_total * 0.5
             kg_posibles = math.floor(tiempo_comer / time_to_eat)
             kg_comidos = min(pasto, kg_posibles)
@@ -95,12 +123,17 @@ class BurroControlador:
                 ganancia = kg_comidos * ENERGIA_POR_SALUD.get(salud, 2)
                 energia = min(100, energia + ganancia)
                 pasto -= kg_comidos
-                evento["acciones"].append(f"🍃 Comió {kg_comidos}kg, energía +{ganancia}%.")
+                evento["acciones"].append(f"🍃 Comió {kg_comidos}kg, energía +{ganancia}%")
         return energia, pasto
 
     def _accion_investigar(self, energia, evento):
-        energia = max(0, energia - 2)
-        evento["acciones"].append("🔬 Investigó y perdió 2% de energía.")
+        """
+        Pierde energía por investigar.
+        No aplica vida_delta ni salud_delta aquí, eso se hace en _procesar_llegada.
+        """
+        energia_perdida = 2
+        energia = max(0, energia - energia_perdida)
+        evento["acciones"].append(f"🔬 Investigó y perdió {energia_perdida}% de energía.")
         return energia
 
     def _accion_hipergigante(self, estrella, energia, pasto, evento):
@@ -128,7 +161,7 @@ class BurroControlador:
     def resumen(self):
         print("\n=== 📋 RESUMEN DEL VIAJE ===")
         for e in self.eventos:
-            print(f"🪐 Estrella {e.get('estrella', 'Desconocida')}:")
+            print(f"\n🪐 Estrella {e.get('estrella', 'Desconocida')}:")
             for a in e.get("acciones", []):
                 print(f"   - {a}")
 

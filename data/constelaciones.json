@@ -160,8 +160,8 @@
                         "y": 18
                     },
                     "hypergiant": false,
-                    "vida_delta": 0,
-                    "salud_delta": null
+                    "vida_delta": -50,
+                    "salud_delta": "Moribundo"
                 },
                 {
                     "id": 9,
@@ -188,8 +188,8 @@
                         "y": 40
                     },
                     "hypergiant": false,
-                    "vida_delta": 0,
-                    "salud_delta": null
+                    "vida_delta": -99,
+                    "salud_delta": "Regular"
                 }
             ]
         },
