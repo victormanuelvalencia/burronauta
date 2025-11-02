@@ -1,15 +1,30 @@
-# vistas/editor_estrellas
+# vistas/editor_estrellas.py
 
 import tkinter as tk
 from tkinter import ttk, messagebox
 
 SALUD_STATES = ["Excelente", "Buena", "Regular", "Mala", "Moribundo", "Muerto"]
 
-def abrir_editor_estrellas(estrellas_info: dict, guardar_callback=None):
+def abrir_editor_estrellas(json_data: dict, guardar_callback=None):
     """
     Abre una ventana para que el usuario pueda editar los efectos investigativos
     de cada estrella (vida_delta y salud_delta) antes de iniciar la simulación.
+    json_data: JSON cargado que contiene constelaciones y estrellas
     """
+    # --- Convertir todas las estrellas a un diccionario plano ---
+    estrellas_info = {}
+    for constelacion in json_data.get("constellations", []):
+        for star in constelacion.get("starts", []):
+            star_copy = star.copy()
+            # Normalizar clave de coordenadas
+            if "coordenates" in star_copy:
+                star_copy["coordenadas"] = star_copy.pop("coordenates")
+            estrellas_info[str(star_copy["id"])] = star_copy
+
+    if not estrellas_info:
+        messagebox.showerror("Error", "No se encontraron estrellas en el JSON.")
+        return
+
     root = tk.Toplevel()
     root.title("Editor de efectos investigativos (pre-misión)")
     root.geometry("520x420")
@@ -30,15 +45,10 @@ def abrir_editor_estrellas(estrellas_info: dict, guardar_callback=None):
     lb.pack()
 
     id_map = []
-    if estrellas_info:
-        for id_ in sorted(estrellas_info.keys(), key=lambda x: int(str(x))):
-            label = estrellas_info[id_].get("label", str(id_))
-            id_map.append(id_)
-            lb.insert("end", f"{id_} - {label}")
-    else:
-        messagebox.showerror("Error", "No se encontraron estrellas en el JSON.")
-        root.destroy()
-        return
+    for id_ in sorted(estrellas_info.keys(), key=lambda x: int(x)):
+        label = estrellas_info[id_].get("label", str(id_))
+        id_map.append(id_)
+        lb.insert("end", f"{id_} - {label}")
 
     # --- Frame derecho: edición de efectos ---
     frame_right = tk.Frame(root, bg="#222222")
@@ -74,12 +84,21 @@ def abrir_editor_estrellas(estrellas_info: dict, guardar_callback=None):
     lbl_hyper = tk.Label(frame_right, text="", bg="#222222", fg="#cccccc", justify="left")
     lbl_hyper.pack(anchor="w")
 
+    # --- Función para mostrar info de una estrella ---
     def _mostrar(id_sel):
         info = estrellas_info[id_sel]
+
+        # Efectos investigativos
         vida_var.set(str(info.get("vida_delta", 0)))
-        salud_var.set(info.get("salud_delta", "") or "")
-        coords = info.get("coordenates", {})
-        lbl_coords.config(text=f"Coordenadas: {coords.get('x','?')}, {coords.get('y','?')}")
+        salud_var.set(info.get("salud_delta") or "")
+
+        # Coordenadas normalizadas
+        coords = info.get("coordenadas", {})
+        x = coords.get("x", "?")
+        y = coords.get("y", "?")
+        lbl_coords.config(text=f"Coordenadas: {x}, {y}")
+
+        # Tiempo para comer y estado hipergigante
         lbl_timeToEat.config(text=f"timeToEat: {info.get('timeToEat', 'N/A')}")
         lbl_hyper.config(text=f"Hipergigante: {'Sí' if info.get('hypergiant', False) else 'No'}")
 
@@ -88,7 +107,7 @@ def abrir_editor_estrellas(estrellas_info: dict, guardar_callback=None):
         if editing:
             return
         sel = lb.curselection()
-        if not sel or not id_map:
+        if not sel:
             return
         _mostrar(id_map[sel[0]])
 
@@ -108,7 +127,6 @@ def abrir_editor_estrellas(estrellas_info: dict, guardar_callback=None):
             return
 
         estrellas_info[idx]["salud_delta"] = salud_var.get() or None
-
         editing = False
         messagebox.showinfo("OK", "Cambios aplicados")
 

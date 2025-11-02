@@ -31,7 +31,7 @@ def cargar_grafo_desde_json(ruta_archivo):
             # Guardamos su información (posición, tipo, hiper, etc.)
             estrellas_info[star_id] = {
                 "label": star.get("label", f"Star_{star_id}"),
-                "coordenadas": star.get("coordenates", {}),
+                "coordenadas": star.get("coordenadas"),
                 "hypergiant": star.get("hypergiant", False),
                 "timeToEat": star.get("timeToEat", 1),
                 "galaxy": nombre,

@@ -7,7 +7,7 @@ from modelos.burro import Burro
 from vistas.menu import abrir_menu
 from vistas.seleccionar_estrella import seleccionar_estrella_inicio
 from vistas.carga_estrellas import mostrar_estrellas
-from vistas.editor_estrelllas import abrir_editor_estrellas
+from vistas.editor_estrellas import abrir_editor_estrellas
 from utilidades.admin_json import write_json, guardar_estrellas_en_json
 import json
 
@@ -37,9 +37,9 @@ def main(ruta_burro, ruta_constelaciones):
 
     # 4) Abrir editor antes de simular
     abrir_editor_estrellas(
-        estrellas_info,
+        constelaciones_data,  # <-- pasa todo el JSON de constelaciones
         guardar_callback=lambda cambios: guardar_estrellas_en_json(
-            constelaciones_data, estrellas_info, ruta_constelaciones
+            constelaciones_data, cambios, ruta_constelaciones
         )
     )
 

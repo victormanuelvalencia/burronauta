@@ -28,8 +28,8 @@
                         "y": 34
                     },
                     "hypergiant": false,
-                    "vida_delta": 0,
-                    "salud_delta": null
+                    "vida_delta": -66,
+                    "salud_delta": "Muerto"
                 },
                 {
                     "id": 2,
@@ -56,8 +56,8 @@
                         "y": 15
                     },
                     "hypergiant": false,
-                    "vida_delta": 0,
-                    "salud_delta": null
+                    "vida_delta": -77,
+                    "salud_delta": "Mala"
                 },
                 {
                     "id": 3,
