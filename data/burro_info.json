@@ -1,8 +1,8 @@
 {
   "burroenergiaInicial": 100,
   "estadoSalud": "Excelente",
-  "pasto": 300,
+  "pasto": 100,
   "number": 123,
   "startAge": 12,
-  "deathAge": 3500
+  "deathAge": 5000
 }
