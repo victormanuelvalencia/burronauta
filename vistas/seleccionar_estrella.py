@@ -2,6 +2,7 @@
 
 import tkinter as tk
 from tkinter import ttk
+from utilidades.ayudas_vistas import centrar_ventana
 
 def seleccionar_estrella_inicio(estrellas_ids, callback):
     """
@@ -13,8 +14,8 @@ def seleccionar_estrella_inicio(estrellas_ids, callback):
     """
     window = tk.Tk()
     window.title("Seleccionar estrella inicial")
-    window.geometry("350x220")
     window.config(bg="#1a1a1a")
+    centrar_ventana(window, 700, 400)
 
     tk.Label(
         window,
@@ -22,7 +23,7 @@ def seleccionar_estrella_inicio(estrellas_ids, callback):
         fg="white",
         bg="#1a1a1a",
         font=("Arial", 12, "bold")
-    ).pack(pady=10)
+    ).pack(pady=(110, 20))
 
     combo = ttk.Combobox(window, values=estrellas_ids, state="readonly", font=("Arial", 11))
     combo.pack(pady=10)

@@ -3,12 +3,13 @@
 import tkinter as tk
 from tkinter import filedialog, messagebox
 from utilidades.admin_json import read_json
+from utilidades.ayudas_vistas import centrar_ventana
 
 def abrir_menu():
     root = tk.Tk()
     root.title("Menú - Burronauta")
-    root.geometry("400x200")
     root.config(bg="#2b2b2b")
+    centrar_ventana(root, 700, 400)
 
     label = tk.Label(
         root,
@@ -17,7 +18,7 @@ def abrir_menu():
         fg="white",
         bg="#2b2b2b"
     )
-    label.pack(pady=20)
+    label.pack(pady=(110, 20))
 
     ruta_seleccionada = {"ruta": None}
 

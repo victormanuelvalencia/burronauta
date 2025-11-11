@@ -1,6 +1,7 @@
 # vistas/carga_estrellas.py
 
 import tkinter as tk
+from utilidades.ayudas_vistas import centrar_ventana
 
 # Colores distintos por constelación
 COLORES = ["#00FFFF", "#FFD700", "#FF69B4", "#ADFF2F", "#FFA07A", "#87CEEB"]
@@ -8,8 +9,8 @@ COLORES = ["#00FFFF", "#FFD700", "#FF69B4", "#ADFF2F", "#FFA07A", "#87CEEB"]
 def mostrar_estrellas(data):
     root = tk.Tk()
     root.title("Mapa de Constelaciones")
-    root.geometry("800x600")
     root.config(bg="black")
+    centrar_ventana(root, 700, 600)
 
     # Frame principal
     main_frame = tk.Frame(root, bg="black")

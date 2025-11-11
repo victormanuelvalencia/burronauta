@@ -2,6 +2,7 @@
 
 import tkinter as tk
 from tkinter import ttk, messagebox
+from utilidades.ayudas_vistas import centrar_ventana
 
 SALUD_STATES = ["Excelente", "Buena", "Regular", "Mala", "Moribundo", "Muerto"]
 
@@ -27,8 +28,8 @@ def abrir_editor_estrellas(json_data: dict, guardar_callback=None):
 
     root = tk.Toplevel()
     root.title("Editor de efectos investigativos (pre-misión)")
-    root.geometry("520x420")
     root.config(bg="#222222")
+    centrar_ventana(root, 700, 400)
 
     editing = False
 
@@ -135,9 +136,16 @@ def abrir_editor_estrellas(json_data: dict, guardar_callback=None):
             guardar_callback(estrellas_info)
             messagebox.showinfo("✅ Guardado", "Cambios guardados en el JSON")
 
-    tk.Button(frame_right, text="💾 Aplicar cambios", bg="#4CAF50", fg="white", command=aplicar).pack(pady=5)
-    tk.Button(frame_right, text="Guardar todo", bg="#0b84ff", fg="white", command=guardar).pack(pady=5)
-    tk.Button(frame_right, text="Continuar", bg="#ff9800", fg="white", command=root.destroy).pack(pady=5)
+    bot_kwargs = {
+        "width": 20,  # ancho en caracteres
+        "height": 1,  # alto en líneas
+        "font": ("Arial", 11, "bold"),
+        "fg": "white",
+    }
+
+    tk.Button(frame_right, text="💾 Aplicar cambios", bg="#4CAF50", command=aplicar, **bot_kwargs).pack(pady=5)
+    tk.Button(frame_right, text="Guardar todo", bg="#0b84ff", command=guardar, **bot_kwargs).pack(pady=5)
+    tk.Button(frame_right, text="Continuar", bg="#ff9800", command=root.destroy, **bot_kwargs).pack(pady=5)
 
     # Mostrar la primera estrella si hay al menos una
     if id_map:
