@@ -1,5 +1,6 @@
 import math
 from copy import deepcopy
+from config import INVESTIGACION_ENERGIA_POR_SEGUNDO, COMIDA_KG_POR_SEGUNDO
 
 # Energía ganada por kg de pasto según salud
 ENERGIA_POR_SALUD = {
@@ -11,10 +12,6 @@ ENERGIA_POR_SALUD = {
     "Muerto": 0
 }
 
-# Parámetros globales
-INVESTIGACION_ENERGIA_POR_SEGUNDO = 0.02   # 2% de energía por segundo
-COMIDA_KG_POR_SEGUNDO = 1.0               # 1 kg/seg
-ENERGIA_COST_PER_DISTANCE = 0.0           # el viaje no gasta energía
 
 
 class Planificador:
