@@ -11,6 +11,9 @@ from vistas.editor_estrellas import abrir_editor_estrellas
 from utilidades.admin_json import write_json, guardar_estrellas_en_json
 import json
 
+# 🆕 Importamos la nueva vista para mostrar la ruta del burro
+from vistas.mostrar_ruta import mostrar_ruta
+
 
 def main(ruta_burro, ruta_constelaciones):
     # 1) Cargar burro
@@ -49,6 +52,10 @@ def main(ruta_burro, ruta_constelaciones):
     # 6) Lógica cuando el usuario elige estrella de inicio
     def iniciar_con_estrella(origen):
         plan = planificador.sugerir_ruta_optima(origen)
+
+        # 🆕 Mostrar visualmente la ruta del burro antes de moverlo
+        if "ruta" in plan and plan["ruta"]:
+            mostrar_ruta(constelaciones_data, plan["ruta"])
 
         burro_controlador = BurroControlador(
             grafo=grafo,
