@@ -2,30 +2,31 @@ import tkinter as tk
 import math
 from config import RAZON_TIEMPO_COMER
 from controladores.simulacion_ruta import SimuladorRuta, salud_por_energia
+from utilidades.ayudas_vistas import centrar_ventana
 
 def mostrar_ruta(constelaciones_data, ruta, burro_info):
     """
     Muestra visualmente la ruta planificada del burronauta 🫏✨
     Incluye edad, energía, salud, pasto, posición actual, destino y temporizador.
     """
-
+    # --- Ventana base ---
     window = tk.Toplevel()
     window.title("Ruta del Burronauta 🫏✨")
-    window.geometry("1200x750")
     window.config(bg="black")
+    centrar_ventana(window, 1200, 750)
 
-    # === Temporizador superior ===
+    # --- Temporizador superior ---
     timer_frame = tk.Frame(window, bg="black")
     timer_frame.pack(side="top", fill="x", pady=5)
     timer_label = tk.Label(timer_frame, text="⏳ Tiempo restante: 0 s", bg="black", fg="yellow",
                            font=("Consolas", 14, "bold"))
     timer_label.pack(pady=5)
 
-    # === Canvas principal ===
+    # --- Canvas principal ---
     canvas = tk.Canvas(window, bg="black", width=950, height=580)
     canvas.pack(side="left", padx=10, pady=20)
 
-    # === Panel lateral ===
+    # --- Panel lateral ---
     sidebar = tk.Frame(window, bg="#111111", width=220)
     sidebar.pack(side="right", fill="y")
 
@@ -43,7 +44,7 @@ def mostrar_ruta(constelaciones_data, ruta, burro_info):
         info_text.insert(tk.END, f"Salud: {salud}\n")
         info_text.insert(tk.END, f"Pasto: {pasto} kg\n")
 
-    # === Escalado y dibujo del grafo ===
+    # --- Escalado y dibujo del grafo ---
     constelaciones = constelaciones_data.get("constellations", [])
     if not constelaciones:
         return
@@ -96,7 +97,7 @@ def mostrar_ruta(constelaciones_data, ruta, burro_info):
         canvas.create_oval(x - radius, y - radius, x + radius, y + radius, fill=fill_color, outline="")
         canvas.create_text(x + 8, y, text=star["label"], fill="white", font=("Arial", 8))
 
-    # === Simulación previa ===
+    # --- Simulación previa ---
     estado_inicial = {
         "energia": burro_info.get("burroenergiaInicial", 100),
         "pasto": burro_info.get("pasto", 100),
@@ -106,7 +107,7 @@ def mostrar_ruta(constelaciones_data, ruta, burro_info):
     simulador = SimuladorRuta(star_info, estado_inicial)
     detalles_ruta = simulador.simular_ruta(ruta)
 
-    # === Panel de estado inferior ===
+    # --- Panel de estado inferior ---
     estado_frame = tk.Frame(window, bg="black")
     estado_frame.pack(fill="x", pady=10)
     estado_text = tk.Text(estado_frame, bg="black", fg="white", font=("Consolas", 12), height=7, width=80)
@@ -128,7 +129,7 @@ Posición actual: {posicion_actual}
 Destino: {destino}
 """)
 
-    # === Burro inicial ===
+    # --- Burro inicial ---
     x0, y0 = star_coords[ruta[0]]
     burro = canvas.create_oval(x0 - 6, y0 - 6, x0 + 6, y0 + 6, fill="lime", outline="")
 
@@ -137,7 +138,14 @@ Destino: {destino}
                       detalle_inicial["energia"], detalle_inicial["edad"], detalle_inicial["salud"], detalle_inicial["pasto"])
     actualizar_panel_lateral(detalle_inicial["edad"], detalle_inicial["energia"], detalle_inicial["salud"], detalle_inicial["pasto"])
 
-    # === Movimiento con temporizador ===
+    # --- Botón inferior ---
+    bottom_frame = tk.Frame(window, bg="black")
+    bottom_frame.pack(side="bottom", fill="x", pady=5)
+    tk.Button(bottom_frame, text="Continuar", bg="#ff9800", activebackground="#FFA500", fg="white",
+              font=("Arial", 14, "bold"), width=20, height=2, relief="raised",
+              command=window.destroy).pack(pady=5)
+
+    # --- Movimiento con temporizador ---
     def mover_burro(i=0, paso=0):
         if i >= len(ruta) - 1:
             detalle_final = detalles_ruta[-1]
@@ -182,7 +190,6 @@ Destino: {destino}
                 timer_label.config(text=f"⏳ Tiempo restante en estrella: {segundos} s")
                 window.after(1000, cuenta_regresiva, segundos - 1)
             else:
-                # Cuando termina el tiempo, avanzar a la siguiente estrella
                 mover_burro(i + 1, 0)
 
         cuenta_regresiva(tiempo_segundos)
