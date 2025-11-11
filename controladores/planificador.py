@@ -60,6 +60,11 @@ class Planificador:
             segundos_comer = 0.0
             segundos_investigar = segundos_total
 
+        # 🔋 Reducción continua de energía por segundo total
+        energia -= INVESTIGACION_ENERGIA_POR_SEGUNDO * segundos_total
+        if energia < 0:
+            energia = 0
+
         energia_perdida_investigacion = INVESTIGACION_ENERGIA_POR_SEGUNDO * segundos_investigar
         energia -= energia_perdida_investigacion
 
@@ -122,8 +127,8 @@ class Planificador:
 
                 estrella = self.estrellas_info.get(str(vecino), {})
 
-                # El viaje solo envejece al burro
-                nueva_energia = energia
+                # El viaje solo envejece al burro y gasta energía
+                nueva_energia = energia - (INVESTIGACION_ENERGIA_POR_SEGUNDO * distancia)
                 nueva_edad = edad + (distancia / 10.0)
                 nuevo_pasto = pasto
 
@@ -140,6 +145,11 @@ class Planificador:
                 else:
                     segundos_comer = 0.0
                     segundos_investigar = segundos_total
+
+                # 🔋 Reducción continua de energía por el tiempo total de estadía
+                nueva_energia -= INVESTIGACION_ENERGIA_POR_SEGUNDO * segundos_total
+                if nueva_energia < 0:
+                    nueva_energia = 0
 
                 energia_perdida_investigacion = INVESTIGACION_ENERGIA_POR_SEGUNDO * segundos_investigar
                 nueva_energia -= energia_perdida_investigacion

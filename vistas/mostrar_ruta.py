@@ -1,35 +1,53 @@
 import tkinter as tk
 import math
 from config import RAZON_TIEMPO_COMER
+from controladores.simulacion_ruta import SimuladorRuta, salud_por_energia
 
-# Colores
-COLOR_EXCELENTE = "\033[92m"
-COLOR_BUENO = "\033[94m"
-COLOR_REGULAR = "\033[93m"
-COLOR_MALO = "\033[91m"
-COLOR_RESET = "\033[0m"
-
-# Parámetros de comportamiento
-RAZON_TIEMPO_INVESTIGAR = 1.2  # Multiplica el tiempo base de investigación
-
-def mostrar_ruta(constelaciones_data, ruta):
+def mostrar_ruta(constelaciones_data, ruta, burro_info):
     """
-    Muestra visualmente la ruta planificada del burro 🫏✨
-    con animación progresiva, pausas personalizadas y temporizador por nodo.
+    Muestra visualmente la ruta planificada del burronauta 🫏✨
+    Incluye edad, energía, salud, pasto, posición actual, destino y temporizador.
     """
+
     window = tk.Toplevel()
-    window.title("Ruta del burro 🫏✨")
-    window.geometry("900x700")
+    window.title("Ruta del Burronauta 🫏✨")
+    window.geometry("1200x750")
     window.config(bg="black")
 
-    canvas = tk.Canvas(window, bg="black", width=900, height=650)
-    canvas.pack(fill="both", expand=True)
+    # === Temporizador superior ===
+    timer_frame = tk.Frame(window, bg="black")
+    timer_frame.pack(side="top", fill="x", pady=5)
+    timer_label = tk.Label(timer_frame, text="⏳ Tiempo restante: 0 s", bg="black", fg="yellow",
+                           font=("Consolas", 14, "bold"))
+    timer_label.pack(pady=5)
 
+    # === Canvas principal ===
+    canvas = tk.Canvas(window, bg="black", width=950, height=580)
+    canvas.pack(side="left", padx=10, pady=20)
+
+    # === Panel lateral ===
+    sidebar = tk.Frame(window, bg="#111111", width=220)
+    sidebar.pack(side="right", fill="y")
+
+    tk.Label(sidebar, text="📜 Información del Burronauta",
+             font=("Arial", 12, "bold"), fg="white", bg="#111111").pack(pady=10)
+
+    info_text = tk.Text(sidebar, bg="#1b1b1b", fg="white", font=("Consolas", 10), width=26, height=40)
+    info_text.pack(padx=10, pady=10)
+
+    def actualizar_panel_lateral(edad_actual, energia, salud, pasto):
+        info_text.delete("1.0", tk.END)
+        info_text.insert(tk.END, f"🫏 BURRONAUTA\n\n")
+        info_text.insert(tk.END, f"Edad actual: {int(edad_actual)}\n")
+        info_text.insert(tk.END, f"Energía: {int(energia)}%\n")
+        info_text.insert(tk.END, f"Salud: {salud}\n")
+        info_text.insert(tk.END, f"Pasto: {pasto} kg\n")
+
+    # === Escalado y dibujo del grafo ===
     constelaciones = constelaciones_data.get("constellations", [])
     if not constelaciones:
         return
 
-    # --- Escalamos coordenadas ---
     xs, ys = [], []
     for const in constelaciones:
         for star in const.get("starts", []):
@@ -41,19 +59,16 @@ def mostrar_ruta(constelaciones_data, ruta):
 
     x_min, x_max = min(xs), max(xs)
     y_min, y_max = min(ys), max(ys)
-    escala = min((900 - 60) / (x_max - x_min + 1), (650 - 60) / (y_max - y_min + 1))
+    escala = min((900 - 60) / (x_max - x_min + 1), (580 - 60) / (y_max - y_min + 1))
 
-    # --- Guardamos posiciones escaladas y tiempos ---
-    star_coords = {}
-    star_info = {}
-    for i, const in enumerate(constelaciones):
+    star_coords, star_info = {}, {}
+    for const in constelaciones:
         for star in const.get("starts", []):
             x = (star["coordenates"]["x"] - x_min) * escala + 30
             y = (star["coordenates"]["y"] - y_min) * escala + 30
             star_coords[str(star["id"])] = (x, y)
             star_info[str(star["id"])] = star
 
-    # --- Dibujar conexiones base ---
     COLORES = ["#FFA500", "#00FFFF", "#FF00FF", "#00FF00", "#FF0000", "#FFFFFF"]
     for i, const in enumerate(constelaciones):
         color = COLORES[i % len(COLORES)]
@@ -64,112 +79,112 @@ def mostrar_ruta(constelaciones_data, ruta):
                 if destino in star_coords:
                     x2, y2 = star_coords[destino]
                     canvas.create_line(x1, y1, x2, y2, fill=color, width=1)
+                    mx, my = (x1 + x2) / 2, (y1 + y2) / 2
+                    canvas.create_text(mx, my, text=f"{link['distance']}", fill="#888888", font=("Arial", 7))
 
-    # --- Dibujar estrellas ---
     for star_id, (x, y) in star_coords.items():
         star = star_info[star_id]
-        if star.get("hypergiant", False):
-            fill_color = "red"
-            radius = 6
-        else:
-            fill_color = "#AAAAAA"
-            radius = 4
-
+        fill_color = "red" if star.get("hypergiant", False) else "#AAAAAA"
+        radius = 6 if star.get("hypergiant", False) else 4
         if ruta:
             if str(star_id) == str(ruta[0]):
-                fill_color = "#00FF00"  # Inicio
+                fill_color = "#00FF00"
                 radius = 8
             elif str(star_id) == str(ruta[-1]):
-                fill_color = "#1E90FF"  # Fin
+                fill_color = "#1E90FF"
                 radius = 8
-
-        canvas.create_oval(
-            x - radius, y - radius, x + radius, y + radius,
-            fill=fill_color, outline=""
-        )
+        canvas.create_oval(x - radius, y - radius, x + radius, y + radius, fill=fill_color, outline="")
         canvas.create_text(x + 8, y, text=star["label"], fill="white", font=("Arial", 8))
 
-    # --- Etiquetas informativas ---
-    tk.Label(
-        window,
-        text="Ruta animada del burro (rojo progresivo) 🌌 | Pausas según timeToEat 🌿",
-        bg="black",
-        fg="white",
-        font=("Arial", 10, "bold")
-    ).place(x=150, y=5)
+    # === Simulación previa ===
+    estado_inicial = {
+        "energia": burro_info.get("burroenergiaInicial", 100),
+        "pasto": burro_info.get("pasto", 100),
+        "edad": burro_info.get("startAge", 0),
+        "edad_muerte": burro_info.get("deathAge", 5000)
+    }
+    simulador = SimuladorRuta(star_info, estado_inicial)
+    detalles_ruta = simulador.simular_ruta(ruta)
 
-    # Temporizador visual (centrado arriba)
-    temporizador_label = tk.Label(
-        window, text="", bg="black", fg="#00FFAA", font=("Arial", 14, "bold")
-    )
-    temporizador_label.place(x=400, y=30)
+    # === Panel de estado inferior ===
+    estado_frame = tk.Frame(window, bg="black")
+    estado_frame.pack(fill="x", pady=10)
+    estado_text = tk.Text(estado_frame, bg="black", fg="white", font=("Consolas", 12), height=7, width=80)
+    estado_text.pack(padx=10)
 
-    # --- Animación progresiva con pausas ---
-    if not ruta or len(ruta) < 2:
-        return
+    def actualizar_estado(posicion_actual, destino, energia, edad, salud, pasto):
+        barra_energia = "█" * int(energia / 10) + "-" * (10 - int(energia / 10))
+        estado_text.delete("1.0", tk.END)
+        estado_text.insert(tk.END,
+f"""🪐 Estado del Burronauta
+-----------------------------
+Edad actual:  {int(edad)} años
+Edad máxima:  {estado_inicial['edad_muerte']} años
+Energía:      [{barra_energia}] {int(energia)}% 
+Salud:        {salud} 💚
+Pasto:        {pasto} kg 🌿
+-----------------------------
+Posición actual: {posicion_actual}
+Destino: {destino}
+""")
 
-    # Burro inicial
+    # === Burro inicial ===
     x0, y0 = star_coords[ruta[0]]
     burro = canvas.create_oval(x0 - 6, y0 - 6, x0 + 6, y0 + 6, fill="lime", outline="")
 
-    def actualizar_temporizador(tiempo_restante, es_final=False):
-        """Actualiza visualmente el temporizador hasta llegar a 0."""
-        if tiempo_restante > 0:
-            temporizador_label.config(text=f"⏳ Tiempo de estadía: {tiempo_restante:.0f}s")
-            window.after(1000, actualizar_temporizador, tiempo_restante - 1, es_final)
-        else:
-            if es_final:
-                temporizador_label.config(text="🪐 Viaje terminado ✅")
-            else:
-                temporizador_label.config(text="🌟 ¡Listo para continuar el viaje!")
+    detalle_inicial = detalles_ruta[0]
+    actualizar_estado(star_info[str(ruta[0])]["label"], star_info[str(ruta[-1])]["label"],
+                      detalle_inicial["energia"], detalle_inicial["edad"], detalle_inicial["salud"], detalle_inicial["pasto"])
+    actualizar_panel_lateral(detalle_inicial["edad"], detalle_inicial["energia"], detalle_inicial["salud"], detalle_inicial["pasto"])
 
+    # === Movimiento con temporizador ===
     def mover_burro(i=0, paso=0):
-        """Dibuja progresivamente el trayecto entre ruta[i] y ruta[i+1], con pausa según 'timeToEat'."""
         if i >= len(ruta) - 1:
-            # Fin del recorrido
-            actualizar_temporizador(0, es_final=True)
+            detalle_final = detalles_ruta[-1]
+            actualizar_estado(star_info[str(ruta[-1])]["label"], "-", detalle_final["energia"],
+                              detalle_final["edad"], detalle_final["salud"], detalle_final["pasto"])
+            actualizar_panel_lateral(detalle_final["edad"], detalle_final["energia"],
+                                     detalle_final["salud"], detalle_final["pasto"])
+            timer_label.config(text="⏱ Ruta completada")
             return
 
         a, b = ruta[i], ruta[i + 1]
-        if a not in star_coords or b not in star_coords:
-            return
-
         x1, y1 = star_coords[a]
         x2, y2 = star_coords[b]
-
-        # Pasos de interpolación
         total_pasos = 30
-        dx = (x2 - x1) / total_pasos
-        dy = (y2 - y1) / total_pasos
+        dx, dy = (x2 - x1) / total_pasos, (y2 - y1) / total_pasos
 
-        # Dibujar línea parcial
-        if paso > 0:
-            x_prev = x1 + dx * (paso - 1)
-            y_prev = y1 + dy * (paso - 1)
+        # Mover burro
+        if paso < total_pasos:
             x_curr = x1 + dx * paso
             y_curr = y1 + dy * paso
-            canvas.create_line(x_prev, y_prev, x_curr, y_curr, fill="red", width=3)
+            if paso > 0:
+                x_prev = x1 + dx * (paso - 1)
+                y_prev = y1 + dy * (paso - 1)
+                canvas.create_line(x_prev, y_prev, x_curr, y_curr, fill="red", width=3)
             canvas.coords(burro, x_curr - 6, y_curr - 6, x_curr + 6, y_curr + 6)
-
-        if paso < total_pasos:
             window.after(50, mover_burro, i, paso + 1)
-        else:
-            # 💤 Pausa personalizada según timeToEat
-            star_data = star_info.get(str(b))
-            tiempo_espera = star_data.get("timeToEat", 1) * RAZON_TIEMPO_COMER  # segundos
-            print(f"🌟 Burro descansando en {star_data.get('label')} durante {tiempo_espera:.1f}s")
+            return
 
-            # Si esta es la última estrella, mostrar mensaje de viaje terminado
-            es_final = (i + 1) == len(ruta) - 1
+        # Llegada a la estrella
+        detalle_actual = detalles_ruta[i + 1]
+        actualizar_estado(star_info[str(b)]["label"], star_info[str(ruta[-1])]["label"],
+                          detalle_actual["energia"], detalle_actual["edad"],
+                          detalle_actual["salud"], detalle_actual["pasto"])
+        actualizar_panel_lateral(detalle_actual["edad"], detalle_actual["energia"],
+                                 detalle_actual["salud"], detalle_actual["pasto"])
 
-            # Iniciar temporizador visual
-            actualizar_temporizador(int(tiempo_espera), es_final=es_final)
+        # Temporizador de la estrella (en segundos)
+        tiempo_segundos = int(star_info[str(b)].get("timeToEat", 1) * RAZON_TIEMPO_COMER)
 
-            # Continuar después de la pausa (si no es la última)
-            if not es_final:
-                window.after(int(tiempo_espera * 1000), mover_burro, i + 1, 0)
+        def cuenta_regresiva(segundos):
+            if segundos >= 0:
+                timer_label.config(text=f"⏳ Tiempo restante en estrella: {segundos} s")
+                window.after(1000, cuenta_regresiva, segundos - 1)
             else:
-                # Mostrar mensaje final tras la última pausa
-                window.after(int(tiempo_espera * 1000), lambda: actualizar_temporizador(0, es_final=True))
+                # Cuando termina el tiempo, avanzar a la siguiente estrella
+                mover_burro(i + 1, 0)
 
-    window.after(1000, mover_burro)  # iniciar animación
+        cuenta_regresiva(tiempo_segundos)
+
+    window.after(1000, mover_burro)

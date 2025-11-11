@@ -4,7 +4,8 @@ import tkinter as tk
 from tkinter import ttk, messagebox
 from utilidades.ayudas_vistas import centrar_ventana
 
-SALUD_STATES = ["Excelente", "Buena", "Regular", "Mala", "Moribundo", "Muerto"]
+SALUD_STATES = ["Sin cambios", "Excelente", "Buena", "Regular", "Mala", "Moribundo", "Muerto"]
+
 
 def abrir_editor_estrellas(json_data: dict, guardar_callback=None):
     """
@@ -121,13 +122,20 @@ def abrir_editor_estrellas(json_data: dict, guardar_callback=None):
             return
         idx = id_map[sel[0]]
 
+        # Validar y aplicar vida_delta
         try:
             estrellas_info[idx]["vida_delta"] = int(vida_var.get())
         except ValueError:
             messagebox.showerror("Error", "vida_delta debe ser un entero")
             return
 
-        estrellas_info[idx]["salud_delta"] = salud_var.get() or None
+        # Aplicar salud_delta solo si no es "Sin cambios"
+        salud_seleccionada = salud_var.get()
+        if salud_seleccionada and salud_seleccionada != "Sin cambios":
+            estrellas_info[idx]["salud_delta"] = salud_seleccionada
+        else:
+            estrellas_info[idx]["salud_delta"] = None  # o conservar valor previo, si existe
+
         editing = False
         messagebox.showinfo("OK", "Cambios aplicados")
 

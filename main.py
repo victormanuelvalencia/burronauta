@@ -1,18 +1,18 @@
-# main
+# main.py
 
+import json
 from controladores.grafo_controlador import cargar_grafo_desde_json
-from controladores.burro_controlador import BurroControlador
-from controladores.planificador import Planificador
 from modelos.burro import Burro
 from vistas.menu import abrir_menu
 from vistas.seleccionar_estrella import seleccionar_estrella_inicio
 from vistas.carga_estrellas import mostrar_estrellas
 from vistas.editor_estrellas import abrir_editor_estrellas
-from utilidades.admin_json import write_json, guardar_estrellas_en_json
-import json
-
-# 🆕 Importamos la nueva vista para mostrar la ruta del burro
+from utilidades.admin_json import guardar_estrellas_en_json
 from vistas.mostrar_ruta import mostrar_ruta
+
+# 🆕 Importamos las nuevas clases
+from controladores.ruta_estelar import RutaEstelar
+from controladores.simulacion_ruta import SimuladorRuta
 
 
 def main(ruta_burro, ruta_constelaciones):
@@ -40,35 +40,42 @@ def main(ruta_burro, ruta_constelaciones):
 
     # 4) Abrir editor antes de simular
     abrir_editor_estrellas(
-        constelaciones_data,  # <-- pasa todo el JSON de constelaciones
+        constelaciones_data,
         guardar_callback=lambda cambios: guardar_estrellas_en_json(
             constelaciones_data, cambios, ruta_constelaciones
         )
     )
 
-    # 5) Instanciar planificador
-    planificador = Planificador(grafo, estrellas_info, estado_inicial)
+    # 5) Instanciar el optimizador de rutas
+    optimizador = RutaEstelar(grafo, estrellas_info)
+    simulador = SimuladorRuta(estrellas_info, estado_inicial)
 
     # 6) Lógica cuando el usuario elige estrella de inicio
     def iniciar_con_estrella(origen):
-        plan = planificador.sugerir_ruta_optima(origen)
+        # 🟢 1️⃣ Obtener la ruta más larga (solo nodos)
+        ruta_optima = optimizador.obtener_ruta_mas_larga(origen)
+        print("\n🧭 Ruta óptima encontrada:", " → ".join(ruta_optima))
 
-        # 🆕 Mostrar visualmente la ruta del burro antes de moverlo
-        if "ruta" in plan and plan["ruta"]:
-            mostrar_ruta(constelaciones_data, plan["ruta"])
+        # 🟢 2️⃣ Simular cómo cambian las variables a lo largo de la ruta
+        detalles_simulacion = simulador.simular_ruta(ruta_optima)
 
-        burro_controlador = BurroControlador(
-            grafo=grafo,
-            estrellas_info=estrellas_info,
-            estado_inicial=estado_inicial
-        )
+        # 🟢 2️⃣b️⃣ Actualizar el objeto Burro con los valores finales de la simulación
+        if detalles_simulacion:
+            ultimo_detalle = detalles_simulacion[-1]
+            burro_modelo.set_burroenergia_inicial(ultimo_detalle["energia"])
+            burro_modelo.set_pasto(ultimo_detalle["pasto"])
+            burro_modelo.set_start_age(ultimo_detalle["edad"])
+            burro_modelo.set_estado_salud(ultimo_detalle["salud"])
 
-        for i in range(1, len(plan["ruta"])):
-            burro_controlador.mover_a(plan["ruta"][i-1], plan["ruta"][i])
-            if not burro_controlador.vivo:
-                break
+        # 🟢 3️⃣ Mostrar visualmente la ruta con detalles
+        mostrar_ruta(constelaciones_data, ruta_optima, burro_modelo.to_dict())
 
-        burro_controlador.resumen()
+        # 🔹 Opcional: imprimir resumen textual
+        for detalle in detalles_simulacion:
+            print(
+                f"🌟 {detalle['estrella']} | Energía: {detalle['energia']:.1f}% | "
+                f"Pasto: {detalle['pasto']:.1f} kg | Edad: {detalle['edad']:.1f} | Salud: {detalle['salud']}"
+            )
 
     # 7) Abrir UI para elegir estrella inicial
     if grafo.get_vertices():
